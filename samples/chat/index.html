@@ -1,44 +1,121 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<meta charset="utf-8">
-<title>Chat example</title>
-<script>
-var connection
-window.addEventListener("load", function () {
-	var nickname = prompt("Choose a nickname")
-	if (nickname) {
-		connection = new WebSocket("ws://"+window.location.hostname+":8081")
-		connection.onopen = function () {
-			console.log("Connection opened")
-			connection.send(nickname)
-			document.getElementById("form").onsubmit = function (event) {
-				var msg = document.getElementById("msg")
-				if (msg.value)
-					connection.send(msg.value)
-				msg.value = ""
-				event.preventDefault()
-			}	
-		}
-		connection.onclose = function () {
-			console.log("Connection closed")
-		}
-		connection.onerror = function () {
-			console.error("Connection error")
-		}
-		connection.onmessage = function (event) {
-			var div = document.createElement("div")
-			div.textContent = event.data
-			document.body.appendChild(div)
-		}
-	}
-})
-</script>
+    <meta charset="utf-8">
+    <title>Chat example</title>
+    <link rel="stylesheet" href="apprentice_new.css"/>
+    <script>
+        var connection;
+
+        function chat_div(chat_json) {
+            try {
+                var right_now = new Date();
+                var parsed_json = JSON.parse(chat_json);
+                var div = document.createElement("div");
+                div.className = "log_turn_container";
+                var time_div = document.createElement("div");
+                time_div.className = "log_timestamp";
+                time_div.textContent = right_now + ":";
+                time_div.style.display = "inline";
+                var who_dat = ("type" in parsed_json && parsed_json["type"] == "DATA") ?
+                        "You" : "Agent";
+                var who_div = document.createElement("div");
+                who_div.className = "log_who";
+                who_div.textContent = who_dat;
+                who_div.style.display = "inline";
+                var bg = (who_dat == "Agent") ? "#77ffff" : "#ffff77";
+                div.style.backgroundColor = bg;
+                var utterance_div = document.createElement("div");
+                //alert("Debug: \n" + JSON.stringify(parsed_json) + '\nRaw:\n' +chat_json)
+                var utt_dat = ("body" in parsed_json) ?
+                        parsed_json.body : chat_json;
+                utterance_div.className = "utterance";
+                utterance_div.innerHTML = utt_dat;
+                div.appendChild(time_div);
+                div.appendChild(who_div);
+                div.appendChild(utterance_div);
+                return div;
+            } catch (err) {
+                var div = document.createElement("div")
+                var right_now = new Date();
+                div.innerHTML = right_now + ": " + chat_json
+                return div;
+            }
+        }
+
+        function parse_message(text) {
+            var chatCredentials = {
+                url: '',
+                name: '',
+                namespace: '',
+                version: '',
+                password: '',
+                chatId: '',
+                status: '',
+            };
+            try {
+                var msg = JSON.parse(text, function (k, v) {
+                    if (k === '') {
+                        return v;
+                    } // if topmost value, return it,
+                    return v;               // else return v * 2.
+                })
+                chatCredentials.url = msg.url
+                chatCredentials.name = msg.name
+                chatCredentials.namespace = msg.namespace
+                chatCredentials.version = msg.version
+                chatCredentials.password = msg.password
+                chatCredentials.chatId = msg.chatId
+                chatCredentials.status = msg.status
+                return chatCredentials
+            }
+            catch (err) {
+                //alert("Parsing error " + err.message + 'on\n' + text)
+                return text
+            }
+        }
+
+        window.addEventListener("load", function () {
+            //var nickname = prompt("Choose a nickname")
+            //var return_message = {
+
+            //}
+            //if (nickname) {
+            connection = new WebSocket("ws://" + window.location.hostname + ":8081")
+            connection.onopen = function () {
+                console.log("Connection opened")
+                //connection.send(nickname)
+                document.getElementById("form").onsubmit = function (event) {
+                    var msg = document.getElementById("msg")
+                    if (msg.value) {
+                        connection.send(msg.value)
+                    }
+                    msg.value = ""
+                    event.preventDefault()
+                }
+            }
+            connection.onclose = function () {
+                console.log("Connection closed")
+            }
+            connection.onerror = function () {
+                console.error("Connection error")
+            }
+            connection.onmessage = function (event) {
+                console.log("Web Client Received " + event.data);
+                var div = chat_div(event.data); //document.createElement("div")
+                //var right_now = new Date()
+                //div.textContent = right_now + ": " + event.data
+                //alert("Web Client formating" + div.innerHTML)
+                document.body.appendChild(div);
+            }
+            //}
+        })
+    </script>
 </head>
 
 <body>
 <form id="form">
-Message: <input size="50" id="msg"> <input type="submit" value="Submit">
+    Message: <input size="50" id="msg"> <input type="submit" value="Submit">
 </form>
 </body>
 </html>
