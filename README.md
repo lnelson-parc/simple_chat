@@ -1,3 +1,22 @@
+# Simple Chat
+This code has been modified from the Node Websocked example code, nodejs-websocket.  The README information
+for that original packages in included unmodified below. The Chat client and server provided here are customized
+to work only with the Xi Apprentice (as modified to work in 'local' mode; i.e., set res.conf variables for local:
+fe.local.url="ws://allspice.parc.xerox.com:8081"
+fe.chat.hosting="local"
+
+# How to use it
+1) Install nodejs, npm, etc (https://nodejs.org/download/)
+2) Use git to clone this code
+3) cd /path/to/simple_chat/samples/chat
+4) node server.js
+5) Navigate to the Xi Apprentice (e.g., http://localhost:9000)
+6) Navigate to the Chat client (e.g., http://localhost:8080)
+7) Connect the Xi Apprentice to the Chat server
+8) Start talking with the first turn coming from the Chat client interface.
+
+## The original README.md follows here...
+
 # Nodejs Websocket
 A nodejs module for websocket server and client
 
