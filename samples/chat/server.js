@@ -2,12 +2,13 @@ var http = require("http");
 var ws = require("../../");
 var fs = require("fs");
 //var persist = require("pst_obj")
-var state = { chatId : ''};
+var state = { chatId : '', agent_name: ''};
 
 
 // api/layer to interface with state object
-function setChatId(chatId) {
+function setChatId(chatId, agent_name) {
     state.chatId = chatId;
+    state.agent_name = agent_name;
     //state.persist();
     return state.chatId;
 }
@@ -45,14 +46,15 @@ function parse_json_text(text) {
     }
 }
 
-function format_reply_message(msg_type, msg_status, msg_body, msg_chatId) {
-    var mgs_format = {
+function format_reply_message(msg_type, msg_status, msg_body, msg_chatId, msg_agent_name) {
+    var msg_format = {
         type: msg_type,
         status: msg_status,
         body: msg_body,
-        chatId: msg_chatId
-    };
-    return JSON.stringify(mgs_format);
+        chatId: msg_chatId,
+        agent_name: msg_agent_name
+    };console.log("Server formatting \n" + JSON.stringify(msg_format))
+    return JSON.stringify(msg_format);
 }
 
 var credentials = null
@@ -77,9 +79,14 @@ var server = ws.createServer(function (connection) {
                 //connection.credentials = parse_handshake(str)
                 // Send reply to the agent client on handshake messages
                 //var chat_credentials = parse_handshake(str);
-                console.log("  Handshake data passed: " + chat_message.chatId)
+                console.log("  Handshake data passed: " + chat_message.name)
                 //broadcast(format_reply_message("HANDSHAKE", "OK", "", setChatId(chat_message.chatId)))
-                broadcast(format_reply_message("HANDSHAKE", "OK", "An Agent has joined the chat", setChatId("User-"+generateUUID())))
+                broadcast(format_reply_message(
+                    "HANDSHAKE",
+                    "OK",
+                    "An Agent has joined the chat",
+                    setChatId("User-"+generateUUID(),chat_message.name),
+                    chat_message.name))
             } else if (chat_message.type == "TEXT" || chat_message.type == "DATA" ) {
                 // Echo text messages to all chat clients, but tell agent client to ignore user messages
                 var reply_type = "DATA";
@@ -91,9 +98,14 @@ var server = ws.createServer(function (connection) {
                     broadcast_text = chat_message.text;
                 }
                 console.log("  Message data passed: " + broadcast_text);
-                broadcast(format_reply_message(reply_type, "OK", broadcast_text, state.chatId))
+                broadcast(format_reply_message(reply_type, "OK", broadcast_text, state.chatId, state.agent_name))
                 if (state.chatId == "") {
-                    broadcast(format_reply_message("AGENT_IGNORE", "OK", "There is no Agent currently available. Please try again later.", state.chatId))
+                    broadcast(format_reply_message(
+                        "AGENT_IGNORE",
+                        "OK",
+                        "There is no Agent currently available. Please try again later.",
+                        state.chatId,
+                        state.agent_name))
 
                 }
             } else if (chat_message.type == "CLOSING" ) {
@@ -101,7 +113,7 @@ var server = ws.createServer(function (connection) {
                 var reply_type = "AGENT_IGNORE";
                 var broadcast_text = "The Agent has left the chat";
                 console.log("  Message for closing passed: " + broadcast_text);
-                broadcast(format_reply_message(reply_type, "OK", broadcast_text, setChatId("")));
+                broadcast(format_reply_message(reply_type, "OK", broadcast_text, setChatId("",""),""));
             }
         }
     });

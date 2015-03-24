@@ -3,7 +3,225 @@
 <head>
     <meta charset="utf-8">
     <title>Chat example</title>
-    <link rel="stylesheet" href="apprentice_new.css"/>
+    <!--<link rel="stylesheet" href="./apprentice_new.css"/> Does not render as css by node server-->
+    <style>
+        /*STRUCTURE*/
+
+        body {
+            background-color: #eeeeee;
+        }
+
+        #content {
+            width: 600px;
+            background-color: #e0dad0;
+        }
+
+        #header {
+            height: 48px;
+            background-color: #242100;
+        }
+
+        #title, #chatStatus, #chatOnly {
+            padding: 12px 10px 0px 10px;
+            background-color: #242100;
+            color: #ffffff;
+            font-family: Verdana, sans-serif;
+            font-size: 16px;
+        }
+
+        .container_label {
+            font-family: Verdana, sans-serif;
+            font-size: 12px;
+            padding: 0px 10px 5px 10px;
+            color: #666666;
+        }
+
+        #main_top, #credentials {
+            padding: 5px 0px 5px 0px;
+        }
+
+        #chat_log_scroll {
+            height: 100%;
+            background-color: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #chat_log {
+            top: 0px;
+            height: 150px;
+            position: relative;
+            overflow: scroll;
+        }
+
+        #chat_log2 {
+            top: 0px;
+            height: 500px;
+            position: relative;
+            overflow: scroll;
+        }
+
+        #credential_box {
+            top: 0px;
+            height: 120px;
+            position: relative;
+            background-color: #ffffff;
+        }
+
+        #main_bottom {
+            padding: 2px 0px 0px 0px;
+        }
+
+        #chat_workspace {
+            min-height: 300px;
+            width: 100%;
+            padding: 10px 10px 10px 10px;
+            background-color: #ffffff;
+        }
+
+        #footer {
+            height: 20px;
+            background-color: #242100;
+        }
+
+        /*LOG*/
+
+        .log_turn_container {
+            padding: 5px 5px 5px 5px;
+            text-align: left;
+            border-bottom: 1px solid #dddddd;
+        }
+
+        .log_turn_container_USER {
+            background-color: #ffff77;
+        }
+
+        .log_turn_container_AGENT {
+            background-color: #77ffff;
+        }
+
+        .log_timestamp {
+            padding-top: 2px;
+            right: 7px;
+            font-family: Verdana, sans-serif;
+            font-size: 10px;
+            color: #666666;
+        }
+
+        .log_who {
+            padding-top: 2px;
+            left: 7px;
+            font-family: Verdana, sans-serif;
+            font-size: 10px;
+            color: #666666;
+        }
+
+        .utterance {
+            margin: 0px 50px 0px 50px;
+        }
+
+        /*WORKSPACE*/
+
+        .workspace_label {
+            font-family: Verdana, sans-serif;
+            font-size: 12px;
+            padding: 2px 5px 2px 5px;
+            background-color: #e0dad0;
+        }
+
+        .workspace_label_USER {
+            background-color: #ffff44;
+        }
+
+        .workspace_label_AGENT {
+            background-color: #44ffff;
+        }
+
+        .submit_button {
+            padding-top: 5px;
+        }
+
+        .reset_button {
+            padding-top: 3px;
+            margin-bottom: 7px;
+            text-align: right;
+        }
+
+        .end_session_button {
+            padding-top: 20px;
+            margin-bottom: 7px;
+            text-align: right;
+        }
+
+        /*USER WORKSPACE*/
+
+        #user_input_text {
+            width: 100%;
+        }
+
+        #user_menu_options {
+            padding-top: 10px;
+        }
+
+        .user_menu_option {
+            padding-left: 5px;
+        }
+
+        #user_menu_generic {
+            margin-top: 10px;
+            border-top: 1px solid #cccccc;
+        }
+
+        #user_menu_generic table {
+            width: 100%;
+        }
+
+        .user_menu_generic_item_description {
+            text-align: right;
+            padding-right: 10px;
+        }
+
+        #user_menu_spinner_container {
+            width: 100%;
+            height: 100px;
+            position: relative;
+        }
+
+        /*AGENT WORKSPACE*/
+
+        #agent_output_text {
+            width: 100%;
+            height: 150px;
+        }
+
+        .agent_option_button {
+            white-space: normal;
+            width: 100%;
+            text-align: left;
+            margin-top: 2px;
+            margin-bottom: 2px;
+        }
+
+        #agentMenu {
+            border-top: 1px solid #cccccc;
+        }
+
+        #agentMenu ol {
+            padding-left: 30px;
+        }
+
+        #agentMenu li {
+            font-family: Verdana, sans-serif;
+            font-size: 12px;
+        }
+
+        #agent_menu_spinner_container {
+            width: 100%;
+            height: 100px;
+            position: relative;
+        }
+
+    </style>
     <script>
         var connection;
 
@@ -11,34 +229,58 @@
             try {
                 var right_now = new Date();
                 var parsed_json = JSON.parse(chat_json);
-                var div = document.createElement("div");
+                // Echo Chat Id
+                var agent_name = ("agent_name" in parsed_json) ?
+                    parsed_json.agent_name : "";
+                var chat_dat = (agent_name) ?
+                        "Agent "+agent_name+" is online" : "No Agent is online";
+                var obj = document.getElementById("chatId");
+                obj.innerText = chat_dat;
+                //
+                // Update the Chat Log
+                var div = document.createElement("span");
                 div.className = "log_turn_container";
-                var time_div = document.createElement("div");
-                time_div.className = "log_timestamp";
-                time_div.textContent = right_now + ":";
-                time_div.style.display = "inline";
+                div.style.display = "inline-block";
+                div.style.padding = "0px 0px 0px 0px";
+                // Create a table to house the log
+                var tbl = document.createElement('table');
+                tbl.style.width = '100%';
+                tbl.setAttribute('border','0');
+                var tbdy = document.createElement('tbody');
+                var tr = document.createElement('tr');
+                // Create the Agent field
+                var td1 = document.createElement('td');
                 var who_dat = ("type" in parsed_json && parsed_json["type"] == "DATA") ?
                         "You" : "Agent";
-                var who_div = document.createElement("div");
-                who_div.className = "log_who";
-                who_div.textContent = who_dat;
-                who_div.style.display = "inline";
+                td1.className = "log_who";
+                td1.textContent = who_dat;
+                td1.width = "10%";
+                tr.appendChild(td1);
+                // Set the background color by who is talking
                 var bg = (who_dat == "Agent") ? "#77ffff" : "#ffff77";
                 div.style.backgroundColor = bg;
-                var utterance_div = document.createElement("div");
-                //alert("Debug: \n" + JSON.stringify(parsed_json) + '\nRaw:\n' +chat_json)
+                // Create the utterance filed
+                var td2 = document.createElement('td');
                 var utt_dat = ("body" in parsed_json) ?
                         parsed_json.body : chat_json;
-                utterance_div.className = "utterance";
-                utterance_div.innerHTML = utt_dat;
-                div.appendChild(time_div);
-                div.appendChild(who_div);
-                div.appendChild(utterance_div);
+                td2.className = "utterance";
+                td2.innerHTML = utt_dat;
+                tr.appendChild(td2);
+                //Create the timestamp field
+                var td3 = document.createElement('td');
+                td3.className = "log_timestamp";
+                td3.textContent = right_now;
+                td3.width = "20%";
+                tr.appendChild(td3);
+                tbdy.appendChild(tr);
+                tbl.appendChild(tbdy);
+                div.appendChild(tbl);
                 return div;
             } catch (err) {
-                var div = document.createElement("div")
+                var div = document.createElement("span")
                 var right_now = new Date();
-                div.innerHTML = right_now + ": " + chat_json
+                div.innerHTML = right_now + ": " + chat_json;
+                throw(err);
                 return div;
             }
         }
@@ -106,7 +348,10 @@
                 //var right_now = new Date()
                 //div.textContent = right_now + ": " + event.data
                 //alert("Web Client formating" + div.innerHTML)
-                document.body.appendChild(div);
+                var chatlog = document.getElementById("chatlog");
+                chatlog.appendChild(div);
+                chatlog.scrollTop = chatlog.scrollHeight;
+                //document.body.appendChild(div);
             }
             //}
         })
@@ -114,8 +359,22 @@
 </head>
 
 <body>
+<div id="header" class="row">
+    <div id="title" class="col-md-3">Chat with Otto</div>
+</div>
+<div class="container_label">Chat
+    <div id="chatId"></div>
+</div>
 <form id="form">
-    Message: <input size="50" id="msg"> <input type="submit" value="Submit">
+    <div style="background-color: #ffffff; padding-bottom: 2px" id="user_input">
+        <div class="workspace_label workspace_label_USER">User Input:</div>
+
+        <div><textarea style="padding-top: 2px; padding-left: 2px" id="msg" rows="4" cols="80"></textarea></div>
+
+        <!--Message: <input size="50" id="msg"> -->
+    </div>
+    <div><input style="padding-top:4px" type="submit" value="Submit"></div>
 </form>
+<div id="chatlog" style="overflow:auto; height:400px; border:solid"></div>
 </body>
 </html>
