@@ -23,6 +23,7 @@ http.createServer(function (req, res) {
 	fs.createReadStream("index.html").pipe(res);
 }).listen(8080)
 
+/*
 function parse_json_text(text) {
     try {
         var parsed_json = {};
@@ -30,13 +31,45 @@ function parse_json_text(text) {
         msg = JSON.parse(text, function (k, v) {
             console.log("  Handshake: " + k + ":" + v);
             if (k === '') {
+                console.log("Processing Incoming Message: No key found, returning" + v);
+                parsed_json['type'] = 'TEXT';
+                return v;
+            }
+            parsed_json[k] = v;
+            return v;
+        });
+        if (!('type' in parsed_json)) {
+            parsed_json['type'] = "TEXT";
+        }
+        console.log('parsed json text');
+        console.log('parsed_json = ' + parsed_json);
+        console.log('msg = ' + msg);
+        return parsed_json;
+    }
+    catch (err) {
+        console.log("  Parse error: " +err.message)
+        return {type:"TEXT", text:text };
+    }
+}
+*/
+
+function parse_json_text(text) {
+    try {
+        var parsed_json = {};
+        console.log("Processing Incoming Message: " + text);
+        msg = JSON.parse(text, function (k, v) {
+            console.log("  Handshake: " + k + ":" + v);
+            if (k === '') {
+                parsed_json['body'] = v;
+                parsed_json['text'] = v;
                 return v;
             }
             parsed_json[k] = v
             return v;
-        })
+        });
+        console.log("msg="+msg);
         if (!('type' in parsed_json)) {
-            parsed_json['type'] = "JSON";
+            parsed_json['type'] = "TEXT";
         }
         return parsed_json;
     }
@@ -45,6 +78,7 @@ function parse_json_text(text) {
         return {type:"TEXT", text:text };
     }
 }
+
 
 function format_reply_message(msg_type, msg_status, msg_body, msg_chatId, msg_agent_name) {
     var msg_format = {
@@ -72,14 +106,15 @@ function generateUUID(){
 var server = ws.createServer(function (connection) {
     //connection.credentials = null
     connection.on("text", function (str) {
+        console.log("Chat Server:  Message data received: " + str);
         var chat_message = parse_json_text(str);
-        console.log("  Message data received: " + str + "\n" + JSON.stringify(chat_message))
+        console.log("  Message data received: " + str + "\n" + JSON.stringify(chat_message));
         if ("type" in chat_message) {
             if (chat_message.type == "HANDSHAKE") {
                 //connection.credentials = parse_handshake(str)
                 // Send reply to the agent client on handshake messages
                 //var chat_credentials = parse_handshake(str);
-                console.log("  Handshake data passed: " + chat_message.name)
+                console.log("  Handshake data passed: " + chat_message.name);
                 //broadcast(format_reply_message("HANDSHAKE", "OK", "", setChatId(chat_message.chatId)))
                 broadcast(format_reply_message(
                     "HANDSHAKE",
@@ -121,6 +156,11 @@ var server = ws.createServer(function (connection) {
     connection.on("close", function () {
         //broadcast(connection.nickname + " left")
     });
+
+    connection.on("error", function (err) {
+        console.log("Caught connection server socket error: ")
+        console.log(err.stack);
+    });
 });
 
 server.listen(8081);
@@ -129,5 +169,5 @@ function broadcast(str) {
 	server.connections.forEach(function (connection) {
         console.log("Server Broadcasting:\n" + str);
 		connection.sendText(str);
-	})
+    })
 }

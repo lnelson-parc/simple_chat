@@ -11,11 +11,6 @@
             background-color: #eeeeee;
         }
 
-        #content {
-            width: 600px;
-            background-color: #e0dad0;
-        }
-
         #header {
             height: 48px;
             background-color: #242100;
@@ -29,59 +24,11 @@
             font-size: 16px;
         }
 
-        .container_label {
-            font-family: Verdana, sans-serif;
-            font-size: 12px;
-            padding: 0px 10px 5px 10px;
-            color: #666666;
-        }
-
-        #main_top, #credentials {
-            padding: 5px 0px 5px 0px;
-        }
-
-        #chat_log_scroll {
-            height: 100%;
-            background-color: #ffffff;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #chat_log {
-            top: 0px;
-            height: 150px;
-            position: relative;
-            overflow: scroll;
-        }
-
-        #chat_log2 {
-            top: 0px;
-            height: 500px;
-            position: relative;
-            overflow: scroll;
-        }
-
-        #credential_box {
-            top: 0px;
-            height: 120px;
-            position: relative;
-            background-color: #ffffff;
-        }
-
-        #main_bottom {
-            padding: 2px 0px 0px 0px;
-        }
-
-        #chat_workspace {
+         #chat_workspace {
             min-height: 300px;
             width: 100%;
             padding: 10px 10px 10px 10px;
             background-color: #ffffff;
-        }
-
-        #footer {
-            height: 20px;
-            background-color: #242100;
         }
 
         /*LOG*/
@@ -133,92 +80,10 @@
             background-color: #ffff44;
         }
 
-        .workspace_label_AGENT {
-            background-color: #44ffff;
-        }
-
-        .submit_button {
-            padding-top: 5px;
-        }
-
-        .reset_button {
-            padding-top: 3px;
-            margin-bottom: 7px;
-            text-align: right;
-        }
-
         .end_session_button {
             padding-top: 20px;
             margin-bottom: 7px;
             text-align: right;
-        }
-
-        /*USER WORKSPACE*/
-
-        #user_input_text {
-            width: 100%;
-        }
-
-        #user_menu_options {
-            padding-top: 10px;
-        }
-
-        .user_menu_option {
-            padding-left: 5px;
-        }
-
-        #user_menu_generic {
-            margin-top: 10px;
-            border-top: 1px solid #cccccc;
-        }
-
-        #user_menu_generic table {
-            width: 100%;
-        }
-
-        .user_menu_generic_item_description {
-            text-align: right;
-            padding-right: 10px;
-        }
-
-        #user_menu_spinner_container {
-            width: 100%;
-            height: 100px;
-            position: relative;
-        }
-
-        /*AGENT WORKSPACE*/
-
-        #agent_output_text {
-            width: 100%;
-            height: 150px;
-        }
-
-        .agent_option_button {
-            white-space: normal;
-            width: 100%;
-            text-align: left;
-            margin-top: 2px;
-            margin-bottom: 2px;
-        }
-
-        #agentMenu {
-            border-top: 1px solid #cccccc;
-        }
-
-        #agentMenu ol {
-            padding-left: 30px;
-        }
-
-        #agentMenu li {
-            font-family: Verdana, sans-serif;
-            font-size: 12px;
-        }
-
-        #agent_menu_spinner_container {
-            width: 100%;
-            height: 100px;
-            position: relative;
         }
 
     </style>
@@ -263,6 +128,11 @@
                 var td2 = document.createElement('td');
                 var utt_dat = ("body" in parsed_json) ?
                         parsed_json.body : chat_json;
+                if (typeof utt_dat === 'object') {
+                    if ("body" in utt_dat) {
+                        utt_dat = utt_dat.body;
+                    }
+                }
                 td2.className = "utterance";
                 td2.innerHTML = utt_dat;
                 tr.appendChild(td2);
@@ -325,12 +195,16 @@
             //if (nickname) {
             connection = new WebSocket("ws://" + window.location.hostname + ":8081")
             connection.onopen = function () {
-                console.log("Connection opened")
+                console.log("Connection opened");
                 //connection.send(nickname)
                 document.getElementById("form").onsubmit = function (event) {
-                    var msg = document.getElementById("msg")
+                    console.log("Form submit");
+                    var msg = document.getElementById("msg");
+                    console.log(msg);
                     if (msg.value) {
-                        connection.send(msg.value)
+                        console.log("Sending " + msg.value);
+                        connection.send(msg.value);
+                        console.log("Sent " + msg.value);
                     }
                     msg.value = ""
                     event.preventDefault()
